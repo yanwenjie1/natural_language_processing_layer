@@ -79,6 +79,8 @@ def encode(texts):
         # if token_ids
 
         results.append((token_ids, attention_masks, token_type_ids, masks))
+        if len(texts_part) < args.max_seq_len or start + args.max_seq_len == len(texts):
+            break
         start += args.max_seq_len - 20
 
     return results
