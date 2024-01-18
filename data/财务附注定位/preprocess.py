@@ -87,6 +87,10 @@ def load_data_table(filename):
             start = 0
             while start < len(this_lines):
                 results.append((this_lines[start: start + args.max_seq_len], this_labels[start: start + args.max_seq_len]))
+                # 2024-01-18 吴筱巧发现bug
+                # 问题的实质是texts_part的长度与args.max_word_len相差超过10,但不超过20 此时不需要下一个part 实际修改为当前的texts_part取完时 不需要下一个part
+                if len(this_lines[start: start + args.max_seq_len]) < args.max_seq_len or start + args.max_seq_len == len(texts):
+                    break
                 start += args.max_seq_len - 20
         except Exception as e:
             print(str(e))
