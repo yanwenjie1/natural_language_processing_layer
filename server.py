@@ -75,12 +75,11 @@ def encode(texts):
         attention_masks = word_ids['attention_mask'].unsqueeze(0)
         token_type_ids = word_ids['token_type_ids'].unsqueeze(0)
         masks = torch.as_tensor(np.ones((1, len(texts_part))), dtype=torch.bool)
-
-        # if token_ids
-
         results.append((token_ids, attention_masks, token_type_ids, masks))
+
         if len(texts_part) < args.max_seq_len or start + args.max_seq_len == len(texts):
             break
+
         start += args.max_seq_len - 20
 
     return results
@@ -100,11 +99,12 @@ def decode(encodings):
     global_values = []
     for (token_ids, attention_masks, token_type_ids, masks) in encodings:
         logits = model(token_ids.to(device), attention_masks.to(device), token_type_ids.to(device), 'dev')
-        logits = torch.softmax(logits, axis=-1)
         if args.use_crf:
             indexs = model.crf.decode(logits, mask=masks.to(device))[0]
+            logits = torch.softmax(logits, axis=-1)
             values = [logits[0, i, j].item() for i, j in enumerate(indexs)]
         else:
+            logits = torch.softmax(logits, axis=-1)
             max_logits = torch.max(logits, dim=-1)
             values = max_logits.values.detach().cpu().numpy().tolist()[0]   # 用于置信度判定
             indexs = max_logits.indices.detach().cpu().numpy().tolist()[0]   # 用于label
@@ -144,7 +144,7 @@ class Dict2Class:
 
 
 torch_env()
-model_name = './checkpoints/财务附注定位-chinese-roberta-small-wwm-cluecorpussmall-2023-12-05'
+model_name = './checkpoints/财务附注定位-chinese-roberta-small-wwm-cluecorpussmall-2023-12-23'
 args_path = os.path.join(model_name, 'args.json')
 model_path = os.path.join(model_name, 'model_best.pt')
 labels_path = os.path.join(model_name, 'labels.json')
